@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>🛠️ Shop Worker Dashboard</h3>
+    <span class="text-muted small">Worker: {{ current_user.full_name }}</span>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- New Item Sale Portal (Invoice) -->
+    <div class="col-lg-7">
+        <div class="card p-3 h-100">
+            <h5 class="mb-3">🧾 New Item Sale Portal (Create Invoice)</h5>
+            <form method="POST" action="{{ url_for('add_sale') }}">
+                <div class="mb-2">
+                    <label class="form-label fw-bold small">Customer Type</label>
+                    <select name="customer_mode" id="customerMode" class="form-select form-select-sm" onchange="toggleCustomerMode()">
+                        <option value="existing">Existing Customer</option>
+                        <option value="new">New Customer (Create Account)</option>
+                    </select>
+                </div>
+
+                <div id="existingCustomerDiv" class="mb-2">
+                    <select name="existing_customer_id" class="form-select form-select-sm">
+                        {% for c in customers %}
+                        <option value="{{ c.id }}">{{ c.full_name }} ({{ c.phone }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div id="newCustomerDiv" class="border rounded p-2 mb-2 bg-light" style="display:none;">
+                    <div class="row g-2">
+                        <div class="col-md-6"><input type="text" name="new_username" class="form-control form-control-sm" placeholder="Username"></div>
+                        <div class="col-md-6"><input type="password" name="new_password" class="form-control form-control-sm" placeholder="Password"></div>
+                        <div class="col-md-6"><input type="text" name="new_full_name" class="form-control form-control-sm" placeholder="Full Name"></div>
+                        <div class="col-md-6"><input type="text" name="new_phone" class="form-control form-control-sm" placeholder="Phone"></div>
+                        <div class="col-md-6"><input type="email" name="new_email" class="form-control form-control-sm" placeholder="Email"></div>
+                        <div class="col-md-6"><input type="text" name="new_address" class="form-control form-control-sm" placeholder="Address"></div>
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <label class="form-label small">Electrical Item</label>
+                        <select name="product_id" id="productSelect" class="form-select form-select-sm" onchange="fillProductDefaults()" required>
+                            {% for p in products %}
+                            <option value="{{ p.id }}" data-price="{{ p.price }}" data-warranty="{{ p.default_warranty_months }}">
+                                {{ p.brand }} - {{ p.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">Serial Number</label>
+                        <input type="text" name="serial_number" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small">Price</label>
+                        <input type="number" step="0.01" name="purchase_price" id="soldPrice" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small">Payment Method</label>
+                        <select name="payment_method" class="form-select form-select-sm">
+                            <option value="Cash">Cash</option>
+                            <option value="Card">Card</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Installment">Installment</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small">Warranty (Months)</label>
+                        <input type="number" name="warranty_months" id="warrantyMonths" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">Purchase Date</label>
+                        <input type="date" name="purchase_date" id="purchaseDate" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success btn-sm w-100 fw-bold">Complete Sale & Generate Invoice</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Product with Photo -->
+    <div class="col-lg-5">
+        <div class="card p-3 h-100">
+            <h5 class="mb-3">📦 Add New Item to Shop</h5>
+            <form method="POST" action="{{ url_for('add_product') }}" enctype="multipart/form-data" class="row g-2">
+                <div class="col-md-6"><input type="text" name="name" class="form-control form-control-sm" placeholder="Item Name" required></div>
+                <div class="col-md-6"><input type="text" name="brand" class="form-control form-control-sm" placeholder="Brand" required></div>
+                <div class="col-md-4"><input type="text" name="model_number" class="form-control form-control-sm" placeholder="Model No" required></div>
+                <div class="col-md-4"><input type="number" step="0.01" name="price" class="form-control form-control-sm" placeholder="Price" required></div>
+                <div class="col-md-4"><input type="number" name="default_warranty_months" class="form-control form-control-sm" placeholder="Warranty (Mo)" required></div>
+                <div class="col-12">
+                    <label class="form-label small mb-1">Item Photo (Optional)</label>
+                    <input type="file" name="product_image" class="form-control form-control-sm" accept="image/*">
+                </div>
+                <div class="col-12 mt-2"><button type="submit" class="btn btn-primary btn-sm w-100">Save Product</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders, Payment Methods & Warranty Expiry -->
+<div class="card p-3 mb-4">
+    <h5 class="mb-3">📋 Recent Orders, Payment Methods & Warranties</h5>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle small">
+            <thead class="table-dark">
+                <tr>
+                    <th>Inv #</th>
+                    <th>Customer</th>
+                    <th>Product & Serial</th>
+                    <th>Price & Payment Method</th>
+                    <th>Warranty Expiry & Status</th>
+                    <th>Invoice</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in purchases %}
+                <tr>
+                    <td>#{{ p.id }}</td>
+                    <td><strong>{{ p.customer_name }}</strong><br>📞 {{ p.customer_phone }}</td>
+                    <td>{{ p.brand }} {{ p.product_name }}<br><code>{{ p.serial_number }}</code></td>
+                    <td>
+                        Rs. {{ "%.2f"|format(p.purchase_price) }}<br>
+                        <span class="badge bg-secondary">{{ p.payment_method }}</span>
+                    </td>
+                    <td>
+                        Bought: {{ p.purchase_date }}<br>
+                        <strong>Expires: {{ p.warranty_expiry }}</strong><br>
+                        {% if p.warranty_status == 'Active' %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-danger">Expired</span>
+                        {% endif %}
+                    </td>
+                    <td><a href="{{ url_for('view_invoice', purchase_id=p.id) }}" class="btn btn-sm btn-outline-dark">View / Print</a></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted">No orders recorded yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Customer Repair Requests & Status Update -->
+<div class="card p-3">
+    <h5 class="mb-3">🔧 Repair Requests & Status Management</h5>
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle small">
+            <thead class="table-light">
+                <tr>
+                    <th>Ticket & Customer</th>
+                    <th>Item & Serial</th>
+                    <th>Customer Photo & Repair Note</th>
+                    <th>Update Status & Tech Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in repairs %}
+                <tr>
+                    <td><strong>#{{ r.id }}</strong><br>{{ r.customer_name }}<br>📞 {{ r.customer_phone }}</td>
+                    <td>{{ r.product_name }}<br><code>{{ r.serial_number }}</code></td>
+                    <td>
+                        {% if r.repair_photo %}
+                            <a href="{{ url_for('static', filename='uploads/repairs/' + r.repair_photo) }}" target="_blank">
+                                <img src="{{ url_for('static', filename='uploads/repairs/' + r.repair_photo) }}" class="repair-thumb mb-1" alt="Repair">
+                            </a><br>
+                        {% endif %}
+                        {{ r.issue_description }}
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('update_repair', repair_id=r.id) }}" class="row g-1">
+                            <div class="col-md-5">
+                                <select name="repair_status" class="form-select form-select-sm">
+                                    <option value="Pending" {% if r.repair_status=='Pending' %}selected{% endif %}>Pending</option>
+                                    <option value="In Progress" {% if r.repair_status=='In Progress' %}selected{% endif %}>In Progress</option>
+                                    <option value="Repaired" {% if r.repair_status=='Repaired' %}selected{% endif %}>Repaired</option>
+                                    <option value="Delivered" {% if r.repair_status=='Delivered' %}selected{% endif %}>Delivered</option>
+                                </select>
+                            </div>
+                            <div class="col-md-7">
+                                <input type="text" name="technician_notes" value="{{ r.technician_notes or '' }}" class="form-control form-control-sm" placeholder="Technician notes">
+                            </div>
+                            <div class="col-12 mt-1">
+                                <button type="submit" class="btn btn-primary btn-sm w-100">Save Repair Status</button>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-center text-muted">No repair requests yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function toggleCustomerMode() {
+    const mode = document.getElementById("customerMode").value;
+    document.getElementById("existingCustomerDiv").style.display = (mode === "existing") ? "block" : "none";
+    document.getElementById("newCustomerDiv").style.display = (mode === "new") ? "block" : "none";
+}
+function fillProductDefaults() {
+    const select = document.getElementById("productSelect");
+    if (!select || select.options.length === 0) return;
+    const opt = select.options[select.selectedIndex];
+    document.getElementById("soldPrice").value = opt.getAttribute("data-price");
+    document.getElementById("warrantyMonths").value = opt.getAttribute("data-warranty");
+}
+window.onload = function() {
+    fillProductDefaults();
+    const dateInput = document.getElementById("purchaseDate");
+    if (dateInput) dateInput.value = new Date().toISOString().split("T")[0];
+};
+</script>
+{% endblock %}

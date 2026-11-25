@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-5">
+        <div class="card overflow-hidden">
+            <img src="{{ url_for('static', filename='uploads/products/shop-banner.jpg') }}"
+                 class="w-100"
+                 style="max-height: 190px; object-fit: cover;"
+                 alt="Onara ElectroShop"
+                 onerror="this.style.display='none'">
+            <div class="p-4">
+                <h3 class="text-center mb-1">Onara ElectroShop</h3>
+                <p class="text-muted text-center small mb-4">
+                    Authorized for Admin, Owner, Shop Workers, and Customers with Purchased Items.
+                </p>
+                <form method="POST" action="{{ url_for('login') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Mobile Number</label>
+                        <input type="text" name="username" class="form-control" placeholder="e.g. 0771234567" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" name="password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Sign In</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

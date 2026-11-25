@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card p-4 mx-auto" style="max-width: 750px;">
+    <div class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
+        <div>
+            <h3 class="mb-0">⚡ Onara ElectroShop Invoice</h3>
+            <small class="text-muted">Official Sales & Warranty Receipt</small>
+        </div>
+        <div class="text-end">
+            <h5>Invoice #INV-{{ "%05d"|format(invoice.id) }}</h5>
+            <div>Date: {{ invoice.purchase_date }}</div>
+        </div>
+    </div>
+
+    <div class="row mb-4 small">
+        <div class="col-md-6">
+            <h6 class="text-muted text-uppercase">Billed To (Customer)</h6>
+            <strong>{{ invoice.customer_name }}</strong><br>
+            Phone: {{ invoice.customer_phone }}<br>
+            Email: {{ invoice.customer_email or 'N/A' }}<br>
+            Address: {{ invoice.customer_address or 'N/A' }}
+        </div>
+        <div class="col-md-6 text-md-end">
+            <h6 class="text-muted text-uppercase">Sale & Payment Info</h6>
+            Sold By: <strong>{{ invoice.sold_by_name }}</strong><br>
+            Payment Method: <span class="badge bg-dark">{{ invoice.payment_method }}</span><br>
+            Warranty Status:
+            {% if invoice.warranty_status == 'Active' %}
+                <span class="badge bg-success">Active</span>
+            {% else %}
+                <span class="badge bg-danger">Expired</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <table class="table table-bordered small align-middle">
+        <thead class="table-light">
+            <tr>
+                <th>Electrical Item</th>
+                <th>Model & Serial No</th>
+                <th>Warranty Period</th>
+                <th class="text-end">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        {% if invoice.image_filename %}
+                            <img src="{{ url_for('static', filename='uploads/products/' + invoice.image_filename) }}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;" alt="Item">
+                        {% endif %}
+                        <strong>{{ invoice.brand }} {{ invoice.product_name }}</strong>
+                    </div>
+                </td>
+                <td>{{ invoice.model_number }}<br>S/N: <code>{{ invoice.serial_number }}</code></td>
+                <td>{{ invoice.warranty_months }} Months<br>(Until {{ invoice.warranty_expiry }})</td>
+                <td class="text-end"><strong>Rs. {{ "%.2f"|format(invoice.purchase_price) }}</strong></td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="3" class="text-end">Total Paid ({{ invoice.payment_method }})</th>
+                <th class="text-end">Rs. {{ "%.2f"|format(invoice.purchase_price) }}</th>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="d-flex justify-content-between mt-3 d-print-none">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary btn-sm">← Back to Dashboard</a>
+        <button onclick="window.print()" class="btn btn-primary btn-sm">🖨️ Print Invoice</button>
+    </div>
+</div>
+{% endblock %}

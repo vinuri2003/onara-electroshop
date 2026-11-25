@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>🛡️ Admin User & System Management</h3>
+    <span class="text-muted small">Admin: {{ current_user.full_name }}</span>
+</div>
+
+<!-- User Role Summary -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card p-3"><strong>Admins:</strong> <h4>{{ role_counts.get('admin', 0) }}</h4></div></div>
+    <div class="col-md-3"><div class="card p-3"><strong>Owners:</strong> <h4>{{ role_counts.get('owner', 0) }}</h4></div></div>
+    <div class="col-md-3"><div class="card p-3"><strong>Workers:</strong> <h4>{{ role_counts.get('worker', 0) }}</h4></div></div>
+    <div class="col-md-3"><div class="card p-3"><strong>Customers:</strong> <h4>{{ role_counts.get('customer', 0) }}</h4></div></div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Add New User Form -->
+    <div class="col-lg-4">
+        <div class="card p-3 h-100">
+            <h5 class="mb-3">➕ Add New User Account</h5>
+            <form method="POST" action="{{ url_for('admin_add_user') }}" class="row g-2">
+                <div class="col-12">
+                    <label class="form-label small">Role</label>
+                    <select name="role" class="form-select form-select-sm" required>
+                        <option value="worker">Shop Worker</option>
+                        <option value="owner">Owner</option>
+                        <option value="admin">Admin</option>
+                        <option value="customer">Customer</option>
+                    </select>
+                </div>
+                <div class="col-md-6"><input type="text" name="username" class="form-control form-control-sm" placeholder="Username" required></div>
+                <div class="col-md-6"><input type="password" name="password" class="form-control form-control-sm" placeholder="Password" required></div>
+                <div class="col-12"><input type="text" name="full_name" class="form-control form-control-sm" placeholder="Full Name" required></div>
+                <div class="col-md-6"><input type="text" name="phone" class="form-control form-control-sm" placeholder="Phone" required></div>
+                <div class="col-md-6"><input type="email" name="email" class="form-control form-control-sm" placeholder="Email"></div>
+                <div class="col-12"><input type="text" name="address" class="form-control form-control-sm" placeholder="Address"></div>
+                <div class="col-12 mt-2"><button type="submit" class="btn btn-dark btn-sm w-100">Create User Account</button></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- All User Accounts with Details -->
+    <div class="col-lg-8">
+        <div class="card p-3 h-100">
+            <h5 class="mb-3">👥 All User Accounts & Details</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle small mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Role</th>
+                            <th>Username & Full Name</th>
+                            <th>Contact Details</th>
+                            <th>Created</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in all_users %}
+                        <tr>
+                            <td>{{ u.id }}</td>
+                            <td>
+                                <span class="badge {% if u.role=='admin' %}bg-danger{% elif u.role=='owner' %}bg-primary{% elif u.role=='worker' %}bg-warning text-dark{% else %}bg-success{% endif %} text-uppercase">
+                                    {{ u.role }}
+                                </span>
+                            </td>
+                            <td><code>{{ u.username }}</code><br><strong>{{ u.full_name }}</strong></td>
+                            <td>📞 {{ u.phone }}<br>✉️ {{ u.email or 'N/A' }}<br>📍 {{ u.address or 'N/A' }}</td>
+                            <td>{{ u.created_at }}</td>
+                            <td>
+                                {% if u.id != session.user_id %}
+                                <form method="POST" action="{{ url_for('admin_delete_user', user_id=u.id) }}" onsubmit="return confirm('Delete user {{ u.username }}?');">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                                </form>
+                                {% else %}
+                                <span class="text-muted">Current</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

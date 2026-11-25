@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>📊 Owner Business Performance Dashboard</h3>
+    <span class="text-muted small">Owner: {{ current_user.full_name }}</span>
+</div>
+
+<!-- Business Performance Overview KPI Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card p-3 bg-primary text-white">
+            <div class="small">Total Revenue</div>
+            <h4 class="mb-0">Rs. {{ "%.2f"|format(sales_summary.total_revenue) }}</h4>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 bg-success text-white">
+            <div class="small">Total Items Sold</div>
+            <h4 class="mb-0">{{ sales_summary.total_orders }}</h4>
+            <small>Active Warranties: {{ sales_summary.active_warranties }}</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 bg-warning text-dark">
+            <div class="small">Service & Repairs</div>
+            <h4 class="mb-0">{{ repair_summary.total_repairs }} Total</h4>
+            <small>Open: {{ repair_summary.open_repairs }} | Done: {{ repair_summary.completed_repairs }}</small>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card p-3 bg-dark text-white">
+            <div class="small">Avg Repair Rating</div>
+            <h4 class="mb-0">⭐ {{ repair_summary.avg_rating or 'N/A' }} / 5</h4>
+            <small>Expired Warranties: {{ sales_summary.expired_warranties }}</small>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Workers Sales Performance -->
+    <div class="col-lg-8">
+        <div class="card p-3 h-100">
+            <h5 class="mb-3">👷 Workers Sales Performance</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle small mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Worker Name</th>
+                            <th>Username</th>
+                            <th>Items Sold</th>
+                            <th>Total Revenue</th>
+                            <th>Avg Sale Value</th>
+                            <th>Last Sale</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for w in worker_performance %}
+                        <tr>
+                            <td><strong>{{ w.full_name }}</strong><br><small class="text-muted">{{ w.phone }}</small></td>
+                            <td><code>{{ w.username }}</code></td>
+                            <td><span class="badge bg-primary">{{ w.total_sales }}</span></td>
+                            <td><strong>Rs. {{ "%.2f"|format(w.total_revenue) }}</strong></td>
+                            <td>Rs. {{ "%.2f"|format(w.avg_sale) }}</td>
+                            <td>{{ w.last_sale_date or 'No sales yet' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-center text-muted">No workers registered yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Method Breakdown -->
+    <div class="col-lg-4">
+        <div class="card p-3 h-100">
+            <h5 class="mb-3">💳 Revenue by Payment Method</h5>
+            <table class="table table-bordered small mb-0">
+                <thead class="table-light">
+                    <tr><th>Method</th><th>Orders</th><th>Total</th></tr>
+                </thead>
+                <tbody>
+                    {% for pm in payment_breakdown %}
+                    <tr>
+                        <td><strong>{{ pm.payment_method }}</strong></td>
+                        <td>{{ pm.order_count }}</td>
+                        <td>Rs. {{ "%.2f"|format(pm.method_total) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="3" class="text-center text-muted">No sales data.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Customer Repair Feedback -->
+<div class="card p-3">
+    <h5 class="mb-3">💬 Recent Customer Repair Feedback</h5>
+    <div class="table-responsive">
+        <table class="table table-bordered small mb-0">
+            <thead class="table-light">
+                <tr><th>Customer</th><th>Product</th><th>Rating</th><th>Feedback</th></tr>
+            </thead>
+            <tbody>
+                {% for fb in recent_feedbacks %}
+                <tr>
+                    <td>{{ fb.customer_name }}</td>
+                    <td>{{ fb.product_name }}</td>
+                    <td>{{ "⭐" * (fb.rating or 0) }} ({{ fb.rating }}/5)</td>
+                    <td>{{ fb.customer_feedback }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="text-center text-muted">No customer feedback submitted yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
